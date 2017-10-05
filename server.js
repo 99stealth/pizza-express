@@ -7,7 +7,7 @@ const bodyParser = require('body-parser');
 const generateId = require('./lib/generate-id');
 
 var redis = require("redis"),
-    client = redis.createClient('6379');
+    client = redis.createClient({ host:'127.0.0.1', port:'6379' });
 
 
 app.use(express.static('static'));
