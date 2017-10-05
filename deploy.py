@@ -4,8 +4,9 @@ import commands
 
 def check_images(client, needed_imgs=['redis', 'node', 'nginx']):
     downloaded_images = []
-    for container in client.images.list():
-        downloaded_images.append(container.attrs["RepoTags"][0].split(":")[0])
+    for image in client.images.list():
+        print image
+        downloaded_images.append(image.attrs["RepoTags"][0].split(":")[0])
     print downloaded_images
     print needed_imgs
     for image in needed_imgs:
@@ -29,11 +30,13 @@ def run_tests():
     pass
 
 
-def run_redis_container(client):
-    pass
+def run_redis_container():
+    output = commands.getstatusoutput('docker run -d --name redis -p 6379:6379 redis')
+    return output
 
-def check_application():
-    pass
+def run_unittests():
+    output = commands.getstatusoutput('npm test')
+    return output
 
 def send_docker_image():
     pass
@@ -42,7 +45,10 @@ def main():
     client = docker.from_env()
     check_images(client)
     redis_running = check_redis_running(client)
-    print redis_running
+    if not redis_running:
+        redis = run_redis_container()
+    unittests_passed = run_unittests()
+    print unittests_passed
     
 
 if __name__ == '__main__':
