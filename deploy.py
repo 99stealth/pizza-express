@@ -1,14 +1,15 @@
+#!/usr/bin/python
+
 import docker
 import commands
 
 
-def check_images(client, needed_imgs=['redis', 'node', 'nginx']):
+def check_images(client, needed_imgs=['redis', 'node']):
     downloaded_images = []
     for image in client.images.list():
         print image
         downloaded_images.append(image.attrs["RepoTags"][0].split(":")[0])
-    print downloaded_images
-    print needed_imgs
+
     for image in needed_imgs:
         if image not in downloaded_images:
             print "[!] Pulling {0} container".format(image)
@@ -34,21 +35,33 @@ def run_redis_container():
     output = commands.getstatusoutput('docker run -d --name redis -p 6379:6379 redis')
     return output
 
+def run_container(**kwargs):
+    if not kwargs['image']:
+        print "[-] Print please provide container name"
+        exit(1)
+    
+    if kwargs['container_port'] and kwargs['host_port']:
+        
+    output = commands.getstatusoutput()
+
 def run_unittests():
     output = commands.getstatusoutput('npm test')
     return output
+
+def run_container_with_application():
 
 def send_docker_image():
     pass
 
 def main():
-    client = docker.from_env()
+    client = docker.from_env(version='auto')
     check_images(client)
     redis_running = check_redis_running(client)
     if not redis_running:
         redis = run_redis_container()
     unittests_passed = run_unittests()
-    print unittests_passed
+    if unittests_passed[0] == 0:
+            
     
 
 if __name__ == '__main__':
