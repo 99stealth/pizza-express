@@ -15,4 +15,3 @@ RUN npm i
 EXPOSE 3000
 
 ENTRYPOINT ["/pizza-express/docker-entrypoint.sh"]
-#CMD ["node", "server.js"]
