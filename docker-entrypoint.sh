@@ -1,5 +1,6 @@
 #!/bin/bash
 
+npm i --production
 npm test
 
 if [ $? == 0 ]; then
