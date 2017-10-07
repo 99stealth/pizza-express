@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
 import docker
+import requests
+import time
 
 def check_needed_images_exist(client, needed_imgs=['redis:latest', 'node:latest']):
     docker_images = []
@@ -39,7 +41,7 @@ def run_application_container(client, redis_container_name, image='pizza-express
     return container
 
 def check_application_is_working():
-    pass
+    return requests.get('http://127.0.0.1:8081').status_code
 
 def send_docker_image():
     pass
@@ -53,7 +55,11 @@ def main():
     redis_container_id, redis_container_name = run_redis_container(client)
 #   print redis_container_id, redis_container_name
     build_result = build_application_container(client)
-    app_container_id = run_application_container(client, redis_container_name) 
+    app_container_id = run_application_container(client, redis_container_name)
+    time.sleep(5)
+    if check_application_is_working() == 200:
+        print "It is alive :D"
+    
 #   print build_result[-1].split('"')[-2].replace('\\n', '') 
             
 if __name__ == '__main__':
