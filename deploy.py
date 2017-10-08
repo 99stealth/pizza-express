@@ -1,8 +1,10 @@
 #!/usr/bin/python
 
+import time
 import docker
 import requests
-import time
+import argparse
+
 
 def check_needed_images_exist(client, needed_imgs=['redis:latest', 'node:latest']):
     docker_images = []
@@ -43,24 +45,62 @@ def run_application_container(client, redis_container_name, image='pizza-express
 def check_application_is_working():
     return requests.get('http://127.0.0.1:8081').status_code
 
-def send_docker_image():
-    pass
+def login_to_docker_registry(client, username, password, registry):
+    response = client.login(username=username, password=password, registry=registry)
+    return response
+
+def push_docker_image(client, container_id, repository, tag='latest'):
+    commit_id = client.commit(container=container_id, repository=repository, tag=tag)
+    response = [line for line in client.push(repository, stream=True)]
+    return commit_id, response
+
+def stop_containers(client, *args):
+    for container in args:
+        client.stop(container=container)
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description='Deployment automation with docker')
+    parser.add_argument('-v', '--verbose', dest='verbose', default=False, action='store_true', help='Activates verbose output')
+    parser.add_argument('-u', '--username', dest='username', type=str, help='Username for docker registry')
+    parser.add_argument('-p', '--password', dest='password', type=str, help='Password for docker registry\'s account')
+    parser.add_argument('-r', '--registry', dest='docker_registry', type=str, default='hub.docker.com', help='Docker registry you want to use')
+    parser.add_argument('-R', '--repository', dest='repository_name', type=str)
+    if not parser.parse_args().username or not parser.parse_args().password:
+        print '[-] There are no credentials provided. Please provide username and password and launch deployment again'
+        exit(1)
+    elif not parser.parse_args().repository_name:
+        print '[-] There is no repository provided to push. Please provide repository and launch deployment again'
+        exit(1)
+    return parser.parse_args()
 
 def main():
+    args = parse_arguments()
     client = docker.Client(version='auto')
     needed_images = check_needed_images_exist(client)
     if needed_images:
+        if args.verbose:
+            print 'Need to pulling {0}'.format(needed_images)
         pull_docker_images(client, needed_images)
 
     redis_container_id, redis_container_name = run_redis_container(client)
-#   print redis_container_id, redis_container_name
+    if args.verbose:
+        print "Redis started with container ID {0} and names {1}".format(redis_container_id, redis_container_name)
     build_result = build_application_container(client)
+    if args.verbose:
+        print build_result[-1].split('"')[-2].replace('\\n', '')
     app_container_id = run_application_container(client, redis_container_name)
-    time.sleep(5)
-    if check_application_is_working() == 200:
-        print "It is alive :D"
-    
-#   print build_result[-1].split('"')[-2].replace('\\n', '') 
+    time.sleep(5) # Waiting for deploy
+    http_status = check_application_is_working()
+    if http_status == 200:
+        if args.verbose:
+            print "HTTP status: {0}.".format(http_status)
+        auth_data = login_to_docker_registry(client, args.username, args.password, args.docker_registry)
+        commit_id, push_response = push_docker_image(client, app_container_id, args.repository_name)
+        print "Commited: {0}".format(commit_id)
+        stop_containers(client, app_container_id, redis_container_id)
+    else:
+        print "HTTP status: {0}. Please check container {1}".format(http_status, app_container_id)
+        exit(1)
             
 if __name__ == '__main__':
     main()
