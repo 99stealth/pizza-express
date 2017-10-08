@@ -1,2 +1,4 @@
-docker
-commands
+docker-py == 1.10.6
+time
+requests ~= 2.18.4
+argparse ~= 1.4.0
