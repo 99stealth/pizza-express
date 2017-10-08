@@ -100,7 +100,7 @@ def main():
         stop_containers(client, app_container_id, redis_container_id)
     else:
         print "HTTP status: {0}. Please check container {1}".format(http_status, app_container_id)
-        exit(1)
+        exit(2)
             
 if __name__ == '__main__':
     main()
