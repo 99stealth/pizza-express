@@ -18,9 +18,11 @@ def check_needed_images_exist(client, needed_imgs=['redis:latest', 'node:latest'
 
     return need_to_pull
 
+
 def pull_docker_images(client, need_to_pull):
     for image in need_to_pull:
         client.pull(image)
+
 
 def run_redis_container(client, image='redis:latest'):
     config = client.create_host_config(port_bindings={'6379': '6379'})
@@ -32,46 +34,52 @@ def run_redis_container(client, image='redis:latest'):
         else:
             continue
 
+
 def build_application_container(client, tag='pizza-express'):
     response = [line for line in client.build(tag=tag, path='./')]
     return response
-    
+
+
 def run_application_container(client, redis_container_name, image='pizza-express:latest'):
     config = client.create_host_config(port_bindings={'3000': '8081'}, links=[(redis_container_name, 'redis')])
     container = client.create_container(image=image, host_config=config)
     response = client.start(container=container.get('Id'))
     return container
 
+
 def check_application_is_working():
     return requests.get('http://127.0.0.1:8081').status_code
+
 
 def login_to_docker_registry(client, username, password, registry):
     response = client.login(username=username, password=password, registry=registry)
     return response
+
 
 def push_docker_image(client, container_id, repository, tag='latest'):
     commit_id = client.commit(container=container_id, repository=repository, tag=tag)
     response = [line for line in client.push(repository, stream=True)]
     return commit_id, response
 
+
 def stop_containers(client, *args):
     for container in args:
         client.stop(container=container)
 
+
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Deployment automation with docker')
-    parser.add_argument('-v', '--verbose', dest='verbose', default=False, action='store_true', help='Activates verbose output')
-    parser.add_argument('-u', '--username', dest='username', type=str, help='Username for docker registry')
-    parser.add_argument('-p', '--password', dest='password', type=str, help='Password for docker registry\'s account')
-    parser.add_argument('-r', '--registry', dest='docker_registry', type=str, default='hub.docker.com', help='Docker registry you want to use')
-    parser.add_argument('-R', '--repository', dest='repository_name', type=str)
-    if not parser.parse_args().username or not parser.parse_args().password:
-        print '[-] There are no credentials provided. Please provide username and password and launch deployment again'
-        exit(1)
-    elif not parser.parse_args().repository_name:
-        print '[-] There is no repository provided to push. Please provide repository and launch deployment again'
-        exit(1)
+    parser.add_argument('-u', '--username', dest='username', type=str, required=True,
+                        help='Username for docker registry')
+    parser.add_argument('-p', '--password', dest='password', type=str, reuired=True,
+                        help='Password for docker registry\'s account')
+    parser.add_argument('-R', '--repository', dest='repository_name', required=True, type=str)
+    parser.add_argument('-v', '--verbose', dest='verbose', default=False, action='store_true',
+                        help='Activates verbose output')
+    parser.add_argument('-r', '--registry', dest='docker_registry', type=str, default='hub.docker.com',
+                        help='Docker registry you want to use')
     return parser.parse_args()
+
 
 def main():
     args = parse_arguments()
@@ -101,6 +109,8 @@ def main():
     else:
         print "HTTP status: {0}. Please check container {1}".format(http_status, app_container_id)
         exit(2)
-            
+
+
 if __name__ == '__main__':
     main()
+
