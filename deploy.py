@@ -71,7 +71,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='Deployment automation with docker')
     parser.add_argument('-u', '--username', dest='username', type=str, required=True,
                         help='Username for docker registry')
-    parser.add_argument('-p', '--password', dest='password', type=str, reuired=True,
+    parser.add_argument('-p', '--password', dest='password', type=str, required=True,
                         help='Password for docker registry\'s account')
     parser.add_argument('-R', '--repository', dest='repository_name', required=True, type=str)
     parser.add_argument('-v', '--verbose', dest='verbose', default=False, action='store_true',
