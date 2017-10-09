@@ -79,7 +79,7 @@ def parse_arguments():
                         help='Activates verbose output')
     parser.add_argument('-r', '--registry', dest='docker_registry', type=str, default='hub.docker.com',
                         help='Docker registry you want to use')
-    if not re.match('^[a-z0-9-_]+/[a-z0-9-_]+$', parser.parse_args().repository):
+    if not re.match('^[a-z0-9-_]+/[a-z0-9-_]+$', parser.parse_args().repository_name):
         print "[-] Repository {0} not match.".format(parser.parse_args().repository_name)
         exit(1)
     return parser.parse_args()
