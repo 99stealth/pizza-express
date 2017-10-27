@@ -7,6 +7,7 @@ import argparse
 import re
 
 
+
 def check_needed_images_exist(client, needed_imgs=['redis:latest', 'node:latest']):
     docker_images = []
     need_to_pull = []
